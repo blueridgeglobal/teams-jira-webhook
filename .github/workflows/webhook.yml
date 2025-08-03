@@ -1,4 +1,4 @@
-name: Teams Webhook Handler
+name: Process Teams Webhook
 on:
   repository_dispatch:
     types: [teams_message]
