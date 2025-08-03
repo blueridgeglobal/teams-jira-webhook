@@ -1,0 +1,18 @@
+name: Teams Webhook Handler
+on:
+  repository_dispatch:
+    types: [teams_message]
+
+jobs:
+  process_message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Lambda Function
+        run: |
+          curl -X POST ${{ secrets.LAMBDA_URL }} \
+            -H "Content-Type: application/json" \
+            -d '{"text": "${{ github.event.client_payload.message}}"}'
+      
+      - name: Log Response
+        run: |
+          echo "Message processed: ${{ github.event.client_payload.message }}"
