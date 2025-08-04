@@ -1,133 +1,157 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Teams to GitHub Webhook Receiver</title>
+    <title>Teams Webhook Receiver</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .input-group { margin: 20px 0; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        button { background: #0078d4; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #106ebe; }
-        .status { margin-top: 20px; padding: 10px; border-radius: 4px; }
-        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 40px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 { 
+            color: #333; 
+            text-align: center; 
+            margin-bottom: 30px;
+        }
+        .input-group { 
+            margin: 25px 0; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 8px; 
+            font-weight: 600; 
+            color: #555;
+        }
+        input[type="text"] { 
+            width: 100%; 
+            padding: 15px; 
+            border: 2px solid #e1e5e9; 
+            border-radius: 8px; 
+            font-size: 16px;
+        }
+        button { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .status { 
+            margin-top: 20px; 
+            padding: 15px; 
+            border-radius: 8px; 
+            font-weight: 500;
+        }
+        .success { 
+            background: #d4edda; 
+            color: #155724; 
+            border: 1px solid #c3e6cb; 
+        }
+        .error { 
+            background: #f8d7da; 
+            color: #721c24; 
+            border: 1px solid #f5c6cb; 
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .example {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .example strong {
+            color: #667eea;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Teams to GitHub Webhook Receiver</h1>
+        <h1>🤖 Teams Webhook Receiver</h1>
         
-        <div class="input-group">
-            <label for="githubToken">GitHub Personal Access Token:</label>
-            <input type="text" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+        <div class="example">
+            <strong>How to use:</strong> Enter a JIRA ticket ID or message, and it will trigger GitHub Actions to process it through your Lambda function.
         </div>
         
         <div class="input-group">
-            <label for="repoOwner">GitHub Username:</label>
-            <input type="text" id="repoOwner" placeholder="your-username">
+            <label for="message">Message:</label>
+            <input type="text" id="message" placeholder="Enter message (e.g., analyze XPR-10518)" />
         </div>
         
-        <div class="input-group">
-            <label for="repoName">Repository Name:</label>
-            <input type="text" id="repoName" placeholder="teams-jira-webhook">
-        </div>
-        
-        <div class="input-group">
-            <label for="lambdaUrl">Lambda API Gateway URL:</label>
-            <input type="text" id="lambdaUrl" placeholder="https://abc123def.execute-api.us-east-1.amazonaws.com/prod/webhook">
-        </div>
-        
-        <button onclick="testConnection()">Test Connection</button>
-        <button onclick="setupWebhook()">Setup Webhook</button>
+        <button onclick="sendMessage()">📤 Send to GitHub Actions</button>
         
         <div id="status"></div>
-        
-        <div class="info">
-            <h3>Instructions:</h3>
-            <ol>
-                <li>Enter your GitHub token (create one at GitHub Settings → Developer settings → Personal access tokens)</li>
-                <li>Enter your GitHub username and repository name</li>
-                <li>Enter your Lambda API Gateway URL</li>
-                <li>Click "Test Connection" to verify</li>
-                <li>Click "Setup Webhook" to configure</li>
-                <li>Post a message in Teams: <code>analyze XPR-10518</code></li>
-            </ol>
-        </div>
     </div>
 
     <script>
-        async function testConnection() {
-            const githubToken = document.getElementById('githubToken').value;
-            const repoOwner = document.getElementById('repoOwner').value;
-            const repoName = document.getElementById('repoName').value;
-            const lambdaUrl = document.getElementById('lambdaUrl').value;
+        async function sendMessage() {
+            const message = document.getElementById('message').value.trim();
             const statusDiv = document.getElementById('status');
             
-            if (!githubToken || !repoOwner || !repoName || !lambdaUrl) {
-                statusDiv.innerHTML = '<div class="error">Please fill in all fields</div>';
+            if (!message) {
+                statusDiv.innerHTML = '<div class="error">❌ Please enter a message</div>';
                 return;
             }
             
+            statusDiv.innerHTML = '<div class="info">🔄 Sending message to GitHub Actions...</div>';
+            
             try {
-                // Test GitHub API access
-                const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}`, {
-                    headers: {
-                        'Authorization': `token ${githubToken}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                });
+                // Replace with your actual GitHub repository details
+                const owner = 'mattpatrone'; // Replace with your GitHub username
+                const repo = 'teams-jira-webhook'; // Replace with your repository name
+                const token = 'YOUR_GITHUB_TOKEN'; // Replace with your GitHub token
                 
-                if (response.ok) {
-                    statusDiv.innerHTML = '<div class="success">✅ GitHub connection successful!</div>';
-                } else {
-                    statusDiv.innerHTML = '<div class="error">❌ GitHub connection failed: ' + response.statusText + '</div>';
-                }
-            } catch (error) {
-                statusDiv.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
-            }
-        }
-        
-        async function setupWebhook() {
-            const githubToken = document.getElementById('githubToken').value;
-            const repoOwner = document.getElementById('repoOwner').value;
-            const repoName = document.getElementById('repoName').value;
-            const lambdaUrl = document.getElementById('lambdaUrl').value;
-            const statusDiv = document.getElementById('status');
-            
-            if (!githubToken || !repoOwner || !repoName || !lambdaUrl) {
-                statusDiv.innerHTML = '<div class="error">Please fill in all fields</div>';
-                return;
-            }
-            
-            try {
-                // Create repository dispatch event
-                const response = await fetch(`https://api.github.com/repos/${repoOwner}/${repoName}/dispatches`, {
+                const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/dispatches`, {
                     method: 'POST',
                     headers: {
-                        'Authorization': `token ${githubToken}`,
+                        'Authorization': `token ${token}`,
                         'Accept': 'application/vnd.github.v3+json',
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
                         event_type: 'teams_message',
                         client_payload: {
-                            message: 'analyze XPR-10518'
+                            message: message
                         }
                     })
                 });
                 
-                if (response.status === 204) {
-                    statusDiv.innerHTML = '<div class="success">✅ Webhook setup successful! Test message sent to GitHub.</div>';
+                if (response.ok) {
+                    statusDiv.innerHTML = '<div class="success">✅ Message sent successfully! GitHub Actions will process it now.</div>';
                 } else {
-                    statusDiv.innerHTML = '<div class="error">❌ Webhook setup failed: ' + response.statusText + '</div>';
+                    const error = await response.text();
+                    statusDiv.innerHTML = '<div class="error">❌ Error: ' + error + '</div>';
                 }
             } catch (error) {
                 statusDiv.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
             }
         }
+        
+        // Allow Enter key to trigger send
+        document.getElementById('message').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
     </script>
 </body>
 </html>
